@@ -3,8 +3,11 @@
 
 
 /*Classe concept 
+Les différentes facettes de différents types, explicités par Amaury
+Attention, certaines facettes font appel à la classe concept
+*/
 
-
+//Initialiser une liste de concepts
 
 /* Classe tâche
 Float x := importance de la tâche
