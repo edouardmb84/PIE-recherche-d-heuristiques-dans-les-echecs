@@ -51,8 +51,8 @@ class GameState():
             self.whiteKingLocation = (move.endRow, move.endCol)
         elif move.pieceMoved == "bK":
             self.blackKingLocation = (move.endRow, move.endCol)
-        
         #TODO: check and update self.inCheck, self.pins and self.checks? cf getValidMoves
+        print("Do:", move)
         
     '''
     Undo the last move made
@@ -62,13 +62,13 @@ class GameState():
             move = self.moveLog.pop() #pop returns the last element of the list and removes it
             self.board[move.startRow][move.startCol] = move.pieceMoved
             self.board[move.endRow][move.endCol] = move.pieceCaptured
-            self.whiteToMove = not self.whiteToMove #switch turn back
+            self.whiteToMove = not self.whiteToMove #swap player to move
             #update king's location
             if move.pieceMoved == "wK":
                 self.whiteKingLocation = (move.startRow, move.startCol)
             elif move.pieceMoved == "bK":
                 self.blackKingLocation = (move.startRow, move.startCol)
-            self.whiteToMove = not self.whiteToMove #swap players
+            print("Undo:", move.getChessNotation())
             #TODO: check and update self.inCheck, self.pins and self.checks? cf getValidMoves
         else:
             #no move to undo
@@ -285,12 +285,15 @@ class GameState():
         rowMoves = (-1,-1, -1, 0, 0 , 1, 1, 1)
         colMoves = (-1, 0, 1, -1, 1, -1, 0, 1)
         allyColor = "w" if self.whiteToMove else "b"
+
+        
         for i in range(8):
             endRow = r + rowMoves[i]
             endCol = c + colMoves[i] 
             if 0 <= endRow < 8 and 0 <= endCol < 8:
                 endPiece = self.board[endRow][endCol]
                 if endPiece[0] != allyColor:
+                    # pretend the king has moved for pins and checks
                     if allyColor == "w":
                         self.whiteKingLocation = (endRow, endCol)
                     else:
@@ -304,7 +307,7 @@ class GameState():
                         self.whiteKingLocation = (r, c)
                     else:
                         self.blackKingLocation = (r, c)
-    
+        #TODO: Castling.
     
     
     """
@@ -312,7 +315,7 @@ class GameState():
     """
     def checkForPinAndChecks(self):
         pins = [] #squares where the allied pinned piece is and direction pinned from                            
-        checks = [] #squares where enemy is applying a check
+        checks = [] #squares from where enemy is applying a check
         inCheck= False
         if self.whiteToMove:
             enemyColor = "b"
@@ -365,8 +368,13 @@ class GameState():
                     checks.append((endRow, endCol, j[0], j[1]))
         
         return inCheck, pins, checks
-                                  
-        
+
+    ### DEBUGGING ZONE ###
+    # CRITICAL TODO: Write unitary tests for every function.
+    #def testCheckForPinsAndChecks(self):
+
+
+    ### END DEBUGGING ZONE
         
         
         
@@ -397,8 +405,15 @@ class Move():
         return False     
         
     def getChessNotation(self):
-        #Real chess notation #??? PGN format? Clarify, verify
-        return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(self.endRow, self.endCol)
+        #Not quite PGN format.
+        if self.pieceCaptured != "--":
+            EAT = True
+        else:
+            EAT = False
+        if EAT:
+            self.pieceMoved + self.getRankFile(self.startRow, self.startCol) + " x " + self.pieceCaptured + self.getRankFile(self.endRow, self.endCol)
+        return self.pieceMoved + self.getRankFile(self.startRow, self.startCol) + " to " + self.getRankFile(self.endRow, self.endCol)
+
     
     def getRankFile(self, r, c):
         return self.colsToFiles[c] + self.rowsToRanks[r]

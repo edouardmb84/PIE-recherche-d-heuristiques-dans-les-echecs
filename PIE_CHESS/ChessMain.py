@@ -4,6 +4,7 @@ Responsable for handeling the user input and displaying the current GameState
 
 import pygame as p
 import ChessEngine
+import os
 
 p.init()
 WIDTH = HEIGTH = 512 
@@ -12,14 +13,24 @@ SQ_SIZE = HEIGTH // DIMENSION
 MAX_FSP = 15 #For animation later on
 IMAGES = {}
 
+### DEBUGGING ZONE ###
+TESTING = False # <- Choose this.
+### END DEBUGGING ZONE ###
+
 """
 Initialize a global dictionary of images. This will be call one in the main    
 """
 def loadImages():
     pieces = ['wP', 'wR', 'wN', 'wB', 'wQ', 'wK', 'bP', 'bR', 'bN', 'bB', 'bQ', 'bK']
-    
+    # get absolute path of current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # navigate to desired directory relative to script path -> absolute path of images
+    images_dir = os.path.join(script_dir, 'images')
+    #print(images_dir)
     for piece in pieces:
-        IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
+        piece_path = images_dir+"\\"+piece+".png"
+        #print(piece, piece_path)
+        IMAGES[piece] = p.transform.scale(p.image.load(piece_path), (SQ_SIZE, SQ_SIZE))
         
 
 """
@@ -27,8 +38,14 @@ The main driver. This will handle user input and updating the graphics
 """
 def main():
 
+    
+
     screen, clock, gs, validMoves, moveMade, running, sqSelected, playerClicks = init_ChessMain()
     
+    if(TESTING):
+        running = False
+        # TODO: try tests; cf DEBUGGING ZONE from ChessEngine.py.
+
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -48,14 +65,15 @@ def main():
                 
                 if len(playerClicks) == 2: #after second click
                     move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                    print(move.getChessNotation())
                     
                     if move in validMoves:
+                        print("Detected:", move.getChessNotation(), "Valid. Moving.")
                         gs.makeMove(move)
                         moveMade = True
-                        sqSelected = () #reser user clicks
+                        sqSelected = () #reset user clicks
                         playerClicks = []
                     else:
+                        print("Detected:", move.getChessNotation(), "Invalid.")
                         playerClicks = [sqSelected]
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: #undo when 'z' is pressed
@@ -69,6 +87,12 @@ def main():
         drawGameState(screen, gs)        
         clock.tick(MAX_FSP)
         p.display.flip()
+
+    
+
+
+
+
 
 """
 Initialize the main driver
